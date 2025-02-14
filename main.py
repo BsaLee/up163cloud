@@ -176,7 +176,7 @@ def get_resume_song_info_list(song_info_list) -> list:
     last_failed_id = get_last_failed_id()
     if last_failed_id is None:
         print("暂无上传失败记录，从头开始上传")
-        return
+        return song_info_list
     for index, song_info in enumerate(song_info_list):
         if int(song_info['id']) == last_failed_id:
             print(f"当前已上传: {index + 1}，最后上传失败的 id: {song_info['id']}")
