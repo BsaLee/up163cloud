@@ -1,0 +1,6 @@
+__pycache__/
+.history/
+neteasecloudmusicapi/
+cookies.txt
+failed_ids.txt
+*.json

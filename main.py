@@ -131,30 +131,37 @@ def process_songs(song_info_list, cookie):
             # 更新 song_info 添加 artist 和 album 信息
             song_info['artist'] = song_artist
             song_info['album'] = song_album
+        try:
+            try_to_upload_song(song_info, cookie)
+        except Exception as e:
+            print(f'上传过程异常，跳过该歌曲：{e}')
+            save_failed_id(song_id)
+
+def try_to_upload_song(song_info, cookie):
+    song_id = song_info['id']
+    attempts = 0
+    while attempts < 3:
+        result = import_song(song_info, cookie)
         
-        attempts = 0
-        while attempts < 3:
-            result = import_song(song_info, cookie)
+        if result:
+            success_songs = result.get('data', {}).get('successSongs', [])
+            failed = result.get('data', {}).get('failed', [])
             
-            if result:
-                success_songs = result.get('data', {}).get('successSongs', [])
-                failed = result.get('data', {}).get('failed', [])
-                
-                if success_songs:
-                    print(f"歌曲 {song_id} 导入成功！")
-                    break  # 成功则跳出循环
-                else:
-                    print(f"歌曲 {song_id} 导入失败，失败原因：{failed}")
-                    if all(f['code'] == -100 for f in failed):  # 文件已存在的错误码
-                        print(f"歌曲 {song_id} 文件已存在，跳过")
-                        save_failed_id(song_id)  # 保存失败的 ID
-                        break
-            time.sleep(5)  # 请求失败后等待 5 秒重新请求
-            attempts += 1
-        
-        if attempts == 3:  # 如果失败三次，则跳过此 ID
-            print(f"歌曲 {song_id} 失败三次，跳过该歌曲。")
-            save_failed_id(song_id)  # 保存失败的 ID
+            if success_songs:
+                print(f"歌曲 {song_id} 导入成功！")
+                break  # 成功则跳出循环
+            else:
+                print(f"歌曲 {song_id} 导入失败，失败原因：{failed}")
+                if all(f['code'] == -100 for f in failed):  # 文件已存在的错误码
+                    print(f"歌曲 {song_id} 文件已存在，跳过")
+                    save_failed_id(song_id)  # 保存失败的 ID
+                    break
+        time.sleep(5)  # 请求失败后等待 5 秒重新请求
+        attempts += 1
+    
+    if attempts == 3:  # 如果失败三次，则跳过此 ID
+        print(f"歌曲 {song_id} 失败三次，跳过该歌曲。")
+        save_failed_id(song_id)  # 保存失败的 ID
 
 # 主函数
 def main():
