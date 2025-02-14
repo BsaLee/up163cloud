@@ -66,6 +66,21 @@ def get_song_details(song_ids):
         print("响应内容无法解析为JSON:", response.text)
         return []
 
+# 判断歌曲是否已上传云盘
+def has_uploaded(song_id, cookie):
+    url = f"http://localhost:3000/user/cloud/detail?id={song_id}&cookie={cookie}"
+    response = requests.get(url)
+    try:
+        response_data = response.json()
+        if response_data.get('code') == 200 and len(response_data['data']) != 0:
+            return True
+        else:
+            print("获取云盘歌曲详情失败:", response_data.get("message"))
+            return False
+    except json.JSONDecodeError:
+        print("获取云盘歌曲信息失败，响应内容无法解析为JSON:", response.text)
+        return False
+
 # 执行 import 请求
 def import_song(song_info, cookie):
     song_id = song_info['id']
@@ -100,7 +115,12 @@ def process_songs(song_info_list, cookie):
     for song_info in song_info_list:
         song_id = song_info['id']
         print(f"正在导入歌曲ID: {song_id}")
-        
+
+        # 已上传则跳过
+        if has_uploaded(song_id, cookie):
+            print('该歌曲已上传，跳过！')
+            continue
+            
         # 查询歌曲的详细信息
         song_details = get_song_details([song_id])
         if song_details:
