@@ -181,6 +181,8 @@ def get_resume_song_info_list(song_info_list) -> list:
         if int(song_info['id']) == last_failed_id:
             print(f"当前已上传: {index + 1}，最后上传失败的 id: {song_info['id']}")
             return song_info_list[index + 1:]
+    print('暂未匹配到最后一次失败的 song_id, 将从头开始上传')
+    return song_info_list
 
 # 主函数
 def main():
