@@ -1,5 +1,6 @@
 import os
 import json
+from typing import Union
 import requests
 import time
 
@@ -108,6 +109,14 @@ def import_song(song_info, cookie):
 def save_failed_id(song_id):
     with open("failed_ids.txt", "a") as f:
         f.write(f"{song_id}\n")
+        
+# 获取最后一个上传的异常 id
+def get_last_failed_id() -> Union[int, None]:
+    if not os.path.exists("failed_ids.txt"):
+        return None
+    with open("failed_ids.txt", "r") as f:
+        ids = [line.strip() for line in f]
+    return int(ids[-1])
 
 # 处理歌曲导入请求
 def process_songs(song_info_list, cookie):
@@ -162,6 +171,16 @@ def try_to_upload_song(song_info, cookie):
     if attempts == 3:  # 如果失败三次，则跳过此 ID
         print(f"歌曲 {song_id} 失败三次，跳过该歌曲。")
         save_failed_id(song_id)  # 保存失败的 ID
+        
+def get_resume_song_info_list(song_info_list) -> list:
+    last_failed_id = get_last_failed_id()
+    if last_failed_id is None:
+        print("暂无上传失败记录，从头开始上传")
+        return
+    for index, song_info in enumerate(song_info_list):
+        if int(song_info['id']) == last_failed_id:
+            print(f"当前已上传: {index + 1}，最后上传失败的 id: {song_info['id']}")
+            return song_info_list[index + 1:]
 
 # 主函数
 def main():
@@ -191,6 +210,9 @@ def main():
         #print(f"共找到 {len(songs_data)} 首歌曲，提取歌曲 ID 和其他信息...")
         song_info_list = get_all_song_info(songs_data)
         #print(f"所有歌曲信息: {song_info_list}")
+        
+        # 从上次失败的歌曲开始上传
+        song_info_list = get_resume_song_info_list(song_info_list)
         
         # 执行歌曲导入请求
         process_songs(song_info_list, cookie)
