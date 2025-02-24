@@ -1,3 +1,4 @@
+import json
 import requests
 
 # 获取云盘信息
@@ -17,10 +18,13 @@ def get_cloud_info(cookie):
             print(f"总大小: {convert_bytes(total_size)}")
             print(f"最大容量: {convert_bytes(max_size)}")
             print(f"文件数量: {file_count}")
+            return True
         else:
             print(f"获取云盘信息失败: {response_data.get('message')}")
+            return False
     except json.JSONDecodeError:
         print("响应内容无法解析为JSON:", response.text)
+        return False
 
 # 字节数转换为可读格式（GB, MB, TB等）
 def convert_bytes(size_in_bytes):
